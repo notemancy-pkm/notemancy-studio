@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import SettingsDialog from "../components/SettingsDialog.svelte";
+  import FuzzySearchInput from "../components/FuzzySearchInput.svelte";
   import Database from "@tauri-apps/plugin-sql";
   import { onMount } from "svelte";
   import "../app.css";
@@ -8,6 +9,7 @@
   let name = $state("");
   let greetMsg = $state("");
   let notes = $state([]);
+  let filteredNotes = $state([]);
   let vaultPath = $state("");
   let loading = $state(true);
   let error = $state("");
@@ -35,6 +37,7 @@
         // If we have a vault path, load the notes
         if (vaultPath) {
           notes = await invoke("get_notes", { vaultDirectory: vaultPath });
+          filteredNotes = notes; // Initially, filtered notes are the same as all notes
         } else {
           error = "No vault path configured. Please set one in settings.";
         }
@@ -49,6 +52,10 @@
     }
   }
 
+  function handleSearchResults(event) {
+    filteredNotes = event.detail;
+  }
+
   onMount(() => {
     loadNotes();
   });
@@ -61,7 +68,7 @@
   <div class="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
     <!-- Left sidebar with note count -->
     <div class="w-full md:w-64 flex-shrink-0">
-      <div class="rounded-xl shadow-lg p-6 text-gray-800">
+      <div class="rounded-xl shadow-lg p-6 text-gray-800 bg-white">
         <h3 class="text-lg font-medium opacity-90 mb-1">Notes Count</h3>
 
         {#if loading}
@@ -90,6 +97,11 @@
             <span class="text-sm opacity-75 mt-1">
               {notes.length === 1 ? "note" : "notes"} in vault
             </span>
+            {#if notes.length !== filteredNotes.length}
+              <span class="text-xs text-blue-600 mt-2">
+                Filtered: {filteredNotes.length} notes
+              </span>
+            {/if}
           </div>
         {/if}
       </div>
@@ -98,6 +110,16 @@
     <!-- Notes table on the right -->
     <div class="flex-grow">
       <h2 class="text-2xl font-semibold mb-4">Your Notes</h2>
+
+      <!-- Search input -->
+      {#if notes.length > 0 && !loading && !error}
+        <FuzzySearchInput
+          data={notes}
+          keys={["title", "relative_path"]}
+          on:results={handleSearchResults}
+          placeholder="Search notes by title or path..."
+        />
+      {/if}
 
       {#if loading}
         <div class="text-center py-10">
@@ -127,20 +149,31 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-none">
-              {#each notes as note}
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div
-                      class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {note.title}
-                    </div>
-                    <div class="text-xs text-gray-500 mt-0.5">
-                      {note.relative_path}
-                    </div>
+              {#if filteredNotes.length === 0}
+                <tr>
+                  <td
+                    class="px-6 py-4 text-center text-sm text-gray-500"
+                    colspan="1"
+                  >
+                    No matching notes found
                   </td>
                 </tr>
-              {/each}
+              {:else}
+                {#each filteredNotes as note}
+                  <tr class="hover:bg-gray-50 transition-colors duration-150">
+                    <td class="px-6 py-4">
+                      <div
+                        class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {note.title}
+                      </div>
+                      <div class="text-xs text-gray-500 mt-0.5">
+                        {note.relative_path}
+                      </div>
+                    </td>
+                  </tr>
+                {/each}
+              {/if}
             </tbody>
           </table>
         </div>
