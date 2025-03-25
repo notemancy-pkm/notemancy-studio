@@ -1,160 +1,150 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import SettingsDialog from "../components/SettingsDialog.svelte";
+  import Database from "@tauri-apps/plugin-sql";
+  import { onMount } from "svelte";
   import "../app.css";
 
   let name = $state("");
   let greetMsg = $state("");
+  let notes = $state([]);
+  let vaultPath = $state("");
+  let loading = $state(true);
+  let error = $state("");
 
   async function greet(event: Event) {
     event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     greetMsg = await invoke("greet", { name });
   }
+
+  async function loadNotes() {
+    try {
+      loading = true;
+      error = "";
+
+      // Load the vault path from settings
+      const db = await Database.load("sqlite:settings.db");
+      const result = await db.select(
+        "SELECT value FROM settings WHERE key = $1",
+        ["vault_path"],
+      );
+
+      if (result && result.length > 0) {
+        vaultPath = result[0].value;
+
+        // If we have a vault path, load the notes
+        if (vaultPath) {
+          notes = await invoke("get_notes", { vaultDirectory: vaultPath });
+        } else {
+          error = "No vault path configured. Please set one in settings.";
+        }
+      } else {
+        error = "No vault path configured. Please set one in settings.";
+      }
+    } catch (e) {
+      console.error("Failed to load notes:", e);
+      error = `Error loading notes: ${e}`;
+    } finally {
+      loading = false;
+    }
+  }
+
+  onMount(() => {
+    loadNotes();
+  });
 </script>
 
 <SettingsDialog />
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<main class="container mx-auto px-4 py-8">
+  <!-- Main content with left sidebar for notes count -->
+  <div class="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
+    <!-- Left sidebar with note count -->
+    <div class="w-full md:w-64 flex-shrink-0">
+      <div class="rounded-xl shadow-lg p-6 text-gray-800">
+        <h3 class="text-lg font-medium opacity-90 mb-1">Notes Count</h3>
 
-  <div class="row">
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://kit.svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
+        {#if loading}
+          <div class="animate-pulse h-12 bg-white/20 rounded mt-2"></div>
+        {:else if error}
+          <div class="flex items-center mt-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <span>Error</span>
+          </div>
+        {:else}
+          <div class="flex flex-col">
+            <span class="text-4xl font-bold">{notes.length}</span>
+            <span class="text-sm opacity-75 mt-1">
+              {notes.length === 1 ? "note" : "notes"} in vault
+            </span>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Notes table on the right -->
+    <div class="flex-grow">
+      <h2 class="text-2xl font-semibold mb-4">Your Notes</h2>
+
+      {#if loading}
+        <div class="text-center py-10">
+          <p class="text-gray-500">Loading notes...</p>
+        </div>
+      {:else if error}
+        <div class="bg-red-50 text-red-700 p-4 rounded-lg text-center">
+          <p>{error}</p>
+        </div>
+      {:else if notes.length === 0}
+        <div class="bg-blue-50 text-blue-700 p-6 rounded-lg text-center">
+          <p>
+            No notes found in your vault. Add some markdown files to get
+            started!
+          </p>
+        </div>
+      {:else}
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <table class="min-w-full divide-y divide-none">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Note Title
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-none">
+              {#each notes as note}
+                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div
+                      class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {note.title}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-0.5">
+                      {note.relative_path}
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+    </div>
   </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-  <p>Press <kbd>Ctrl</kbd> + <kbd>,</kbd> to open settings</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
 </main>
-
-<style>
-  .logo.vite:hover {
-    filter: drop-shadow(0 0 2em #747bff);
-  }
-
-  .logo.svelte-kit:hover {
-    filter: drop-shadow(0 0 2em #ff3e00);
-  }
-
-  :root {
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
-
-    color: #0f0f0f;
-    background-color: #f6f6f6;
-
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .container {
-    margin: 0;
-    padding-top: 10vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-  }
-
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: 0.75s;
-  }
-
-  .logo.tauri:hover {
-    filter: drop-shadow(0 0 2em #24c8db);
-  }
-
-  .row {
-    display: flex;
-    justify-content: center;
-  }
-
-  a {
-    font-weight: 500;
-    color: #646cff;
-    text-decoration: inherit;
-  }
-
-  a:hover {
-    color: #535bf2;
-  }
-
-  h1 {
-    text-align: center;
-  }
-
-  input,
-  button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    color: #0f0f0f;
-    background-color: #ffffff;
-    transition: border-color 0.25s;
-    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  button:hover {
-    border-color: #396cd8;
-  }
-  button:active {
-    border-color: #396cd8;
-    background-color: #e8e8e8;
-  }
-
-  input,
-  button {
-    outline: none;
-  }
-
-  #greet-input {
-    margin-right: 5px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color: #f6f6f6;
-      background-color: #2f2f2f;
-    }
-
-    a:hover {
-      color: #24c8db;
-    }
-
-    input,
-    button {
-      color: #ffffff;
-      background-color: #0f0f0f98;
-    }
-    button:active {
-      background-color: #0f0f0f69;
-    }
-  }
-</style>

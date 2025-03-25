@@ -1,17 +1,44 @@
+// src-tauri/src/lib.rs
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
+mod notes; // Add this to import our new module
+use notes::helpers; // Import the helpers module
 
+// Define a struct to return note data to the frontend
 #[derive(Debug, Serialize, Deserialize)]
-struct Setting {
-    id: Option<i64>,
-    key: String,
-    value: String,
+struct NoteInfo {
+    title: String,
+    absolute_path: String,
+    relative_path: String,
 }
 
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+// Add a new command to get all notes
+#[tauri::command]
+fn get_notes(vault_directory: &str) -> Vec<NoteInfo> {
+    let notes = helpers::get_all_notes(vault_directory);
+    let mut result = Vec::new();
+
+    for (absolute_path, relative_path) in notes {
+        let title = helpers::get_title(
+            Some(&absolute_path),
+            Some(&relative_path),
+            Some(vault_directory),
+        );
+
+        result.push(NoteInfo {
+            title,
+            absolute_path,
+            relative_path,
+        });
+    }
+
+    result
 }
 
 #[tauri::command]
@@ -50,7 +77,11 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, check_and_create_directory])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            check_and_create_directory,
+            get_notes // Add our new function to the invoke handler
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
