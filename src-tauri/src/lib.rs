@@ -42,6 +42,20 @@ fn get_notes(vault_directory: &str) -> Vec<NoteInfo> {
 }
 
 #[tauri::command]
+fn get_note_content(relative_path: &str, vault_directory: &str) -> String {
+    println!(
+        "Called get_note_content with: {}, {}",
+        relative_path, vault_directory
+    );
+    helpers::get_content(None, Some(relative_path), Some(vault_directory))
+}
+
+#[tauri::command]
+fn get_note_title(relative_path: &str, vault_directory: &str) -> String {
+    helpers::get_title(None, Some(relative_path), Some(vault_directory))
+}
+
+#[tauri::command]
 async fn check_and_create_directory(path: &str) -> Result<bool, String> {
     let path = Path::new(path);
     if path.exists() {
@@ -80,7 +94,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             check_and_create_directory,
-            get_notes // Add our new function to the invoke handler
+            get_notes,
+            get_note_content, // Add our new function to get note content
+            get_note_title    // Add our new function to get note title
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
