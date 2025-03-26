@@ -21,6 +21,8 @@
   let isDirty = $state(false);
   let saving = $state(false);
   let saveError = $state("");
+  let saveSuccess = $state(false);
+  let saveSuccessTimeout: ReturnType<typeof setTimeout>;
 
   // Get carta instance
   const carta = getCartaInstance("light");
@@ -35,13 +37,15 @@
     // Ctrl+L to toggle edit mode
     if (event.key === "l" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      toggleEditMode();
-    }
 
-    // Ctrl+S to save
-    if (event.key === "s" && (event.ctrlKey || event.metaKey) && isEditMode) {
-      event.preventDefault();
-      saveNote();
+      // If we're exiting edit mode and there are unsaved changes, save first
+      if (isEditMode && isDirty) {
+        saveNote().then(() => {
+          toggleEditMode();
+        });
+      } else {
+        toggleEditMode();
+      }
     }
   }
 
@@ -66,6 +70,14 @@
       });
 
       isDirty = false;
+
+      // Show success message briefly
+      saveSuccess = true;
+      if (saveSuccessTimeout) clearTimeout(saveSuccessTimeout);
+      saveSuccessTimeout = setTimeout(() => {
+        saveSuccess = false;
+      }, 2000);
+
       if (props.onSave) props.onSave();
     } catch (e) {
       console.error("Failed to save note:", e);
@@ -81,51 +93,18 @@
 
   onDestroy(() => {
     window.removeEventListener("keydown", handleKeydown);
+    if (saveSuccessTimeout) clearTimeout(saveSuccessTimeout);
   });
 </script>
 
 <div class="relative">
-  <!-- 
-  <button
-    class="absolute top-0 right-0 z-10 p-2 m-2 bg-white/80 hover:bg-white text-gray-600 rounded shadow-sm"
-    on:click={toggleEditMode}
-  >
-    {#if isEditMode}
-      <span class="flex items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 mr-1"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path
-            fill-rule="evenodd"
-            d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        View
-      </span>
-    {:else}
-      <span class="flex items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 mr-1"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
-          />
-        </svg>
-        Edit
-      </span>
-    {/if}
-  </button>-->
+  {#if isDirty}
+    <hr class="border-[#ff7eb6] mb-16" />
+  {:else}
+    <hr class="border-blue-400 mb-16" />
+  {/if}
 
-  <hr class="border-blue-400 mb-16" />
-  <!-- Save Status Messages -->
+  <!-- Status Messages -->
   {#if saveError}
     <div
       class="absolute top-0 left-0 m-2 p-2 bg-red-100 text-red-800 rounded shadow-sm"
@@ -138,11 +117,11 @@
     >
       Saving...
     </div>
-  {:else if isDirty && isEditMode}
+  {:else if saveSuccess}
     <div
-      class="absolute top-0 left-0 m-2 p-2 bg-yellow-100 text-yellow-800 rounded shadow-sm"
+      class="absolute top-0 left-0 m-2 p-2 bg-green-100 text-green-800 rounded shadow-sm"
     >
-      Unsaved changes
+      Saved successfully
     </div>
   {/if}
 
@@ -172,17 +151,4 @@
       </div>
     {/if}
   </div>
-
-  <!-- Save Button (only in edit mode) -->
-  {#if isEditMode}
-    <div class="mt-4 flex justify-end">
-      <button
-        on:click={saveNote}
-        disabled={!isDirty || saving}
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {saving ? "Saving..." : "Save"}
-      </button>
-    </div>
-  {/if}
 </div>
