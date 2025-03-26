@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, tick, onDestroy } from "svelte";
-  import { writable } from "svelte/store";
 
   // Props using Svelte 5 runes
   const props = $props<{
@@ -27,6 +26,8 @@
   let segments = $state<Segment[]>([]);
   let currentId = $state("");
   let observer: IntersectionObserver | null = null;
+  // Create a sorted headings variable to avoid repeated sorting
+  let sortedHeadings = $state<Heading[]>([]);
 
   // Compute vertical line segments with gaps
   function computeSegments() {
@@ -37,7 +38,9 @@
     const viewportHeight = window.innerHeight;
     const gapPercent = (gapPx / viewportHeight) * 100;
     const halfGap = gapPercent / 2;
-    const sorted = [...headings].sort((a, b) => a.pos - b.pos);
+
+    // Use the pre-sorted headings instead of sorting again
+    const sorted = sortedHeadings;
 
     // Segment from top of container to just before the first dot
     const firstSegmentHeight = sorted[0].pos - halfGap;
@@ -101,14 +104,21 @@
       "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]",
     );
 
-    headings = Array.from(updatedHeadingElements).map((el: Element) => {
-      const level = parseInt(el.tagName.substring(1));
-      const text = el.textContent?.trim() || "";
-      const rect = el.getBoundingClientRect();
-      const top = rect.top + window.scrollY;
-      const pos = (top / contentHeight) * 100;
-      return { id: el.getAttribute("id") || "", text, level, pos };
-    });
+    // Create a new headings array
+    const newHeadings = Array.from(updatedHeadingElements).map(
+      (el: Element) => {
+        const level = parseInt(el.tagName.substring(1));
+        const text = el.textContent?.trim() || "";
+        const rect = el.getBoundingClientRect();
+        const top = rect.top + window.scrollY;
+        const pos = (top / contentHeight) * 100;
+        return { id: el.getAttribute("id") || "", text, level, pos };
+      },
+    );
+
+    // Update headings and sortedHeadings in one go to avoid multiple updates
+    headings = newHeadings;
+    sortedHeadings = [...newHeadings].sort((a, b) => a.pos - b.pos);
 
     computeSegments();
 
@@ -155,12 +165,17 @@
     window.removeEventListener("resize", updateToC);
   });
 
-  // Computed values
-  $effect(() => {
-    const sortedHeadings = [...headings].sort((a, b) => a.pos - b.pos);
-    const currentIndex = sortedHeadings.findIndex((h) => h.id === currentId);
+  // Update sortedHeadings whenever headings or currentId changes
+  // $effect(() => {
+  //   if (headings.length > 0) {
+  //     // Only update sortedHeadings if needed
+  //     sortedHeadings = [...headings].sort((a, b) => a.pos - b.pos);
+  //     computeSegments();
+  //   }
+  // });
 
-    // Update segments whenever headings or currentId changes
+  $effect(() => {
+    currentId;
     computeSegments();
   });
 </script>
@@ -175,12 +190,12 @@
   {/each}
 
   <!-- Render active blue segments adjacent to the current heading -->
-  {#if headings.length > 0}
+  {#if headings.length > 0 && sortedHeadings.length > 0}
     {#if currentId}
       {#each headings as heading, i}
         {#if heading.id === currentId}
           <!-- Active segments -->
-          {#if i === 0}
+          {#if i === 0 || sortedHeadings[0].id === heading.id}
             <!-- For the first heading, highlight from the top to the dot -->
             <div
               class="absolute right-2 w-px bg-blue-500"
@@ -189,9 +204,10 @@
             ></div>
           {:else}
             <!-- For non-first headings, highlight the segment above the current dot -->
-            {@const prevHeading = [...headings].sort((a, b) => a.pos - b.pos)[
-              i - 1
-            ]}
+            {@const currentIndex = sortedHeadings.findIndex(
+              (h) => h.id === heading.id,
+            )}
+            {@const prevHeading = sortedHeadings[currentIndex - 1]}
             <div
               class="absolute right-2 w-px bg-blue-500"
               style="top: {prevHeading.pos +
@@ -202,7 +218,7 @@
             ></div>
           {/if}
 
-          {#if i === headings.length - 1}
+          {#if i === headings.length - 1 || sortedHeadings[sortedHeadings.length - 1].id === heading.id}
             <!-- For the last heading, highlight from the dot to the bottom -->
             <div
               class="absolute right-2 w-px bg-blue-500"
@@ -213,9 +229,10 @@
             ></div>
           {:else}
             <!-- For non-last headings, highlight the segment below the current dot -->
-            {@const nextHeading = [...headings].sort((a, b) => a.pos - b.pos)[
-              i + 1
-            ]}
+            {@const currentIndex = sortedHeadings.findIndex(
+              (h) => h.id === heading.id,
+            )}
+            {@const nextHeading = sortedHeadings[currentIndex + 1]}
             <div
               class="absolute right-2 w-px bg-blue-500"
               style="top: {heading.pos +
@@ -248,14 +265,12 @@
 </div>
 
 <style>
-  /* Hide heading text by default */
   .toc-container a {
     opacity: 0;
     transition: opacity 0.3s ease;
     font-size: 0.85rem;
   }
 
-  /* Show heading text on mouse hover over the ToC area */
   .toc-container:hover a {
     opacity: 1;
   }

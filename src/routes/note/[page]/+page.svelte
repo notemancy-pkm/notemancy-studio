@@ -8,7 +8,6 @@
   import Database from "@tauri-apps/plugin-sql";
   import { getCartaInstance } from "./getCarta";
   import NoteEditor from "./NoteEditor.svelte";
-  import ToC from "./ToC.svelte";
   import BacklinksPanel from "../../../components/BacklinksPanel.svelte";
   import { goto } from "$app/navigation";
 
@@ -80,12 +79,30 @@
   onMount(() => {
     fetchNoteContent();
   });
+
+  onMount(() => {
+    // Add event listener for wiki links
+    document.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      const wikiLink = target.closest(".svelte-navigate");
+
+      if (wikiLink) {
+        event.preventDefault();
+
+        // Get the path from the data attribute
+        const path = wikiLink.getAttribute("data-path");
+        if (path) {
+          // Navigate using goto
+          goto(`/note/${path}`);
+        }
+      }
+    });
+  });
 </script>
 
 <main class="container mx-auto p-6 max-w-4xl">
   <!-- Add the Backlinks component -->
   <BacklinksPanel {relativePath} on:navigate={handleNavigate} />
-
   {#if loading}
     <div class="flex justify-center items-center h-64">
       <p class="text-gray-500">Loading note...</p>

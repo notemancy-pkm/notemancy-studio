@@ -4,6 +4,7 @@
   import { Carta, MarkdownEditor, Markdown } from "carta-md";
   import ToC from "./ToC.svelte";
   import { addToast } from "$lib/Toaster.svelte";
+  import { page } from "$app/stores";
 
   import "carta-md/default.css";
   import DOMPurify from "isomorphic-dompurify";
@@ -32,6 +33,7 @@
 
   // Track if content has changed
   $effect(() => {
+    console.log("PTH", $page.url.pathname);
     isDirty = editorContent !== props.content;
   });
 

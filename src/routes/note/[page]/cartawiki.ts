@@ -19,7 +19,7 @@ function formatWikiPath(path: string): string {
 		);
 	}
 	// Prepend the /note/ prefix to ensure correct routing
-	return `/${segments.join("/")}`;
+	return `/note/${segments.join("%2F")}`;
 }
 
 /**

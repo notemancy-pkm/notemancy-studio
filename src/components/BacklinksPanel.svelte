@@ -4,6 +4,7 @@
   import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import { fade, fly } from "svelte/transition";
   import Database from "@tauri-apps/plugin-sql";
+  import { goto } from "$app/navigation";
 
   // Props
   const props = $props<{
