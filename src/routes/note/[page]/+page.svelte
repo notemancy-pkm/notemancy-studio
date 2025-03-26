@@ -19,7 +19,11 @@
   let vaultPath = $state("");
 
   // Get the path parameter from the URL
-  const relativePath = $page.params.page;
+  let relativePath = $state("");
+  $effect(() => {
+    relativePath = $page.params.page;
+    fetchNoteContent();
+  });
 
   async function fetchNoteContent() {
     try {
@@ -81,8 +85,8 @@
   {:else}
     <div class="bg-white p-6">
       <div class="mx-auto max-w-[784px] pb-16">
-        <div class="mb-16 prose prose-md">
-          <h1 class="mb-2 font-semibold">
+        <div class="mb-16 prose prose-md mx-auto">
+          <h1 class="mb-2 font-semibold font-[Noto_Sans] text-center">
             {noteTitle}
           </h1>
         </div>

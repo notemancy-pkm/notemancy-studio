@@ -118,6 +118,7 @@
   });
 
   function openNote(relativePath: string) {
+    console.log("REL: ", relativePath);
     // Navigate to the note page
     goto(`/note/${encodeURIComponent(relativePath)}`);
     open.set(false); // Close the dialog
@@ -215,7 +216,7 @@
             <button
               type="button"
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-              on:click={clearSearch}
+              onclick={clearSearch}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -252,7 +253,7 @@
               <li>
                 <button
                   class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 rounded"
-                  on:click={() => openNote(note.relative_path)}
+                  onclick={() => openNote(note.relative_path)}
                 >
                   <div class="font-medium text-blue-600">
                     {note.title}
