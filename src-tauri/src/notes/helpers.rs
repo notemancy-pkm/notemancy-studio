@@ -5,6 +5,36 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
+/// Updates the content of a markdown file while preserving its frontmatter
+pub fn update_note(
+    absolute_path: Option<&str>,
+    relative_path: Option<&str>,
+    vault_directory: Option<&str>,
+    new_content: &str,
+) -> Result<(), io::Error> {
+    // First, resolve the path to the note
+    let path = resolve_note_path(absolute_path, relative_path, vault_directory)?;
+
+    // Read the current content of the file
+    let current_content = read_file_content(&path)?;
+
+    // Extract frontmatter from the current content
+    let (frontmatter, _) = extract_frontmatter_and_content(&current_content);
+
+    // Create the new content with frontmatter preserved
+    let updated_content = if let Some(frontmatter) = frontmatter {
+        format!("---\n{}\n---\n\n{}", frontmatter, new_content)
+    } else {
+        // If there was no frontmatter, just use the new content
+        new_content.to_string()
+    };
+
+    // Write the updated content to the file
+    fs::write(path, updated_content)?;
+
+    Ok(())
+}
+
 /// Recursively scans a directory for markdown files and returns them as (absolute_path, relative_path) pairs
 pub fn get_all_notes(vault_directory: &str) -> Vec<(String, String)> {
     let vault_path = Path::new(vault_directory);
@@ -62,7 +92,7 @@ fn collect_markdown_files(
 }
 
 /// Resolves a path to a note, given either an absolute path or a relative path and the vault directory
-fn resolve_note_path(
+pub fn resolve_note_path(
     absolute_path: Option<&str>,
     relative_path: Option<&str>,
     vault_directory: Option<&str>,
@@ -97,7 +127,7 @@ fn resolve_note_path(
 }
 
 /// Reads the content of a file
-fn read_file_content(path: &Path) -> Result<String, io::Error> {
+pub fn read_file_content(path: &Path) -> Result<String, io::Error> {
     let mut file = fs::File::open(path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -105,7 +135,7 @@ fn read_file_content(path: &Path) -> Result<String, io::Error> {
 }
 
 /// Extracts frontmatter and content from a markdown file
-fn extract_frontmatter_and_content(content: &str) -> (Option<String>, String) {
+pub fn extract_frontmatter_and_content(content: &str) -> (Option<String>, String) {
     // Check if content starts with frontmatter delimiter
     if content.starts_with("---") {
         // Find the end of the frontmatter (second occurrence of ---)

@@ -72,6 +72,24 @@ async fn check_and_create_directory(path: &str) -> Result<bool, String> {
     }
 }
 
+#[tauri::command]
+fn update_note_content(
+    absolute_path: Option<&str>,
+    relative_path: Option<&str>,
+    vault_directory: &str,
+    new_content: &str,
+) -> Result<bool, String> {
+    match helpers::update_note(
+        absolute_path,
+        relative_path,
+        Some(vault_directory),
+        new_content,
+    ) {
+        Ok(_) => Ok(true),
+        Err(e) => Err(format!("Failed to update note: {}", e)),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Define migrations
@@ -96,7 +114,8 @@ pub fn run() {
             check_and_create_directory,
             get_notes,
             get_note_content, // Add our new function to get note content
-            get_note_title    // Add our new function to get note title
+            get_note_title,   // Add our new function to get note title
+            update_note_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
