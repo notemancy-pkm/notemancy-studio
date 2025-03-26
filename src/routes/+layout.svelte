@@ -2,14 +2,16 @@
   import "../app.css";
   import FileDialog from "../components/FileDialog.svelte";
   import SettingsDialog from "../components/SettingsDialog.svelte";
+  import Toaster from "$lib/Toaster.svelte";
 </script>
 
 <FileDialog />
 <SettingsDialog />
+<Toaster />
 
 <slot />
 
-<div class="fixed bottom-4 right-4 flex flex-col gap-2 text-xs text-gray-500">
+<div class="fixed bottom-4 left-4 flex flex-col gap-2 text-xs text-gray-500">
   <div class="bg-white/80 p-2 rounded shadow-sm">
     <span class="font-medium">Keyboard shortcuts:</span>
     <div class="mt-1 flex flex-col gap-2 items-start">

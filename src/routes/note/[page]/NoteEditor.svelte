@@ -3,6 +3,7 @@
   import { onMount, onDestroy } from "svelte";
   import { Carta, MarkdownEditor, Markdown } from "carta-md";
   import ToC from "./ToC.svelte";
+  import { addToast } from "$lib/Toaster.svelte";
 
   import "carta-md/default.css";
   import DOMPurify from "isomorphic-dompurify";
@@ -75,15 +76,25 @@
 
       // Show success message briefly
       saveSuccess = true;
-      if (saveSuccessTimeout) clearTimeout(saveSuccessTimeout);
-      saveSuccessTimeout = setTimeout(() => {
-        saveSuccess = false;
-      }, 2000);
+      addToast({
+        data: {
+          title: "Saved",
+          description: "",
+          color: "green",
+        },
+      });
 
       if (props.onSave) props.onSave();
     } catch (e) {
       console.error("Failed to save note:", e);
       saveError = `Error saving note: ${e}`;
+      addToast({
+        data: {
+          title: "Save Error",
+          description: saveError,
+          color: "red",
+        },
+      });
     } finally {
       saving = false;
     }
