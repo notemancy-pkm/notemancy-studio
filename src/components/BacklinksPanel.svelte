@@ -134,7 +134,7 @@
 
 {#if isVisible}
   <div
-    class="fixed left-4 top-1/4 z-40 w-72 shadow-lg rounded-xl bg-white border border-gray-100 overflow-hidden"
+    class="fixed left-4 top-2/4 z-40 w-80 shadow-md rounded-sm overflow-hidden"
     transition:fly={{
       x: -100,
       duration: 250,
@@ -142,9 +142,7 @@
     }}
   >
     <!-- Panel header -->
-    <div
-      class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center"
-    >
+    <div class="bg-gray-50 px-4 py-3 flex justify-between items-center">
       <h2 class="text-sm font-medium text-gray-700">
         Backlinks
         {#if backlinks.length > 0}
@@ -179,9 +177,7 @@
     <div class="max-h-96 overflow-y-auto bg-white p-1">
       {#if isLoading}
         <div class="flex justify-center items-center p-6 opacity-75">
-          <div
-            class="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"
-          ></div>
+          <div class="w-5 h-5 rounded-full animate-spin"></div>
         </div>
       {:else if error}
         <div class="p-4 text-xs text-red-500">
@@ -197,18 +193,7 @@
         </div>
       {:else if backlinks.length === 0}
         <div class="p-4 text-center text-xs text-gray-400">
-          No
-          <div class="p-4 text-center text-xs text-gray-400">
-            No backlinks found for this note
-
-            {#if debugInfo}
-              <div
-                class="mt-2 p-2 text-left bg-gray-50 rounded text-[10px] whitespace-pre-wrap text-gray-700"
-              >
-                {debugInfo}
-              </div>
-            {/if}
-          </div>
+          No backlinks found for this note
         </div>
       {:else}
         <ul class="divide-y divide-gray-50">
@@ -234,11 +219,6 @@
                   <div class="text-sm font-medium text-gray-700">
                     {link.title || "Untitled"}
                   </div>
-                  <div
-                    class="text-xs text-gray-400 truncate mt-0.5 max-w-[15rem]"
-                  >
-                    {link.relative_path}
-                  </div>
                 </div>
               </button>
             </li>
@@ -248,7 +228,7 @@
     </div>
 
     <!-- Keyboard shortcut hint -->
-    <div
+    <!-- <div
       class="bg-gray-50 px-3 py-2 text-xs text-center text-gray-400 border-t border-gray-100"
     >
       <kbd
@@ -261,6 +241,6 @@
         >B</kbd
       >
       <span class="mx-1">to toggle</span>
-    </div>
+    </div> -->
   </div>
 {/if}
