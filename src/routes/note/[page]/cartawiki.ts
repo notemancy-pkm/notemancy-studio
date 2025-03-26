@@ -6,6 +6,7 @@ import type { Plugin } from "carta-md";
 /**
  * Helper to clean up and format the wiki link path.
  */
+// Updated version
 function formatWikiPath(path: string): string {
 	// Remove any leading/trailing slashes and split the path
 	const cleanPath = path.replace(/^\/+|\/+$/g, "");
@@ -17,8 +18,8 @@ function formatWikiPath(path: string): string {
 			"%20",
 		);
 	}
-	// Prepend a slash (adjust as needed)
-	return "/" + segments.join("/");
+	// Prepend the /note/ prefix to ensure correct routing
+	return `/${segments.join("/")}`;
 }
 
 /**

@@ -104,10 +104,10 @@
     window.addEventListener("keydown", handleKeydown);
   });
 
-  onDestroy(() => {
+  /* onDestroy(() => {
     window.removeEventListener("keydown", handleKeydown);
     if (saveSuccessTimeout) clearTimeout(saveSuccessTimeout);
-  });
+  }); */
 </script>
 
 <div class="relative">

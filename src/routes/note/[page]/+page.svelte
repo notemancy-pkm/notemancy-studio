@@ -9,6 +9,8 @@
   import { getCartaInstance } from "./getCarta";
   import NoteEditor from "./NoteEditor.svelte";
   import ToC from "./ToC.svelte";
+  import BacklinksPanel from "../../../components/BacklinksPanel.svelte";
+  import { goto } from "$app/navigation";
 
   // Create Carta instance with sanitizer
   let carta = $state(getCartaInstance("light"));
@@ -69,12 +71,21 @@
     await fetchNoteContent();
   }
 
+  // Handle navigation from backlinks
+  function handleNavigate(event) {
+    const { relativePath } = event.detail;
+    goto(`/note/${encodeURIComponent(relativePath)}`);
+  }
+
   onMount(() => {
     fetchNoteContent();
   });
 </script>
 
 <main class="container mx-auto p-6 max-w-4xl">
+  <!-- Add the Backlinks component -->
+  <BacklinksPanel {relativePath} on:navigate={handleNavigate} />
+
   {#if loading}
     <div class="flex justify-center items-center h-64">
       <p class="text-gray-500">Loading note...</p>
@@ -92,7 +103,7 @@
           </h1>
         </div>
 
-        <!-- Use our new NoteEditor component instead of just Markdown -->
+        <!-- NoteEditor component -->
         <NoteEditor
           content={noteContent}
           {relativePath}

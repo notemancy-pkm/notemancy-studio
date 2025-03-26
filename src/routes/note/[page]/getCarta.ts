@@ -62,7 +62,7 @@ export function getCartaInstance(theme: "dark" | "light", forceReinit = false) {
 			shikiOptions: { themes: [min_light, min_dark] },
 			extensions: [
 				cartawiki,
-				component(mapped, initializeComponents),
+				// component(mapped, initializeComponents),
 				math(),
 				callouts,
 				mermaid,

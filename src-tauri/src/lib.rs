@@ -13,6 +13,52 @@ struct NoteInfo {
     relative_path: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct BacklinkInfo {
+    title: String,
+    relative_path: String,
+}
+
+#[tauri::command]
+fn get_backlinks(relative_path: &str, vault_directory: &str) -> Result<Vec<BacklinkInfo>, String> {
+    println!(
+        "Tauri command get_backlinks called with: path={}, vault={}",
+        relative_path, vault_directory
+    );
+
+    // Validate inputs
+    if relative_path.is_empty() {
+        return Err("Relative path is empty".into());
+    }
+
+    if vault_directory.is_empty() {
+        return Err("Vault directory is empty".into());
+    }
+
+    // Check if vault directory exists
+    if !Path::new(vault_directory).exists() {
+        return Err(format!(
+            "Vault directory does not exist: {}",
+            vault_directory
+        ));
+    }
+
+    // Get backlinks
+    let backlinks = helpers::find_backlinks(relative_path, vault_directory);
+    println!("Found {} backlinks", backlinks.len());
+
+    // Convert to BacklinkInfo structs
+    let result = backlinks
+        .into_iter()
+        .map(|(rel_path, title)| BacklinkInfo {
+            title,
+            relative_path: rel_path,
+        })
+        .collect();
+
+    Ok(result)
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -116,6 +162,7 @@ pub fn run() {
             get_note_content, // Add our new function to get note content
             get_note_title,   // Add our new function to get note title
             update_note_content,
+            get_backlinks
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
