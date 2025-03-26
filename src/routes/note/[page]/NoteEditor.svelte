@@ -2,6 +2,8 @@
   import { invoke } from "@tauri-apps/api/core";
   import { onMount, onDestroy } from "svelte";
   import { Carta, MarkdownEditor, Markdown } from "carta-md";
+  import ToC from "./ToC.svelte";
+
   import "carta-md/default.css";
   import DOMPurify from "isomorphic-dompurify";
   import { getCartaInstance } from "./getCarta";
@@ -125,6 +127,13 @@
     </div>
   {/if}
 
+  {#if !isEditMode}
+    <div
+      class="fixed top-[5svh] right-0 flex w-[350px] justify-end p-2 text-xs"
+    >
+      <ToC contentSelector="#mdcontent" />
+    </div>
+  {/if}
   <!-- Editor / Preview Container -->
   <div class="min-h-[400px]">
     {#if isEditMode}
@@ -141,6 +150,7 @@
     {:else}
       <div
         class="prose prose-base prose-headings:font-[Noto_Sans] mx-auto max-w-[784px] pb-16 font-[IBM_Plex_Serif] text-gray-700"
+        id="mdcontent"
       >
         <Markdown
           {carta}

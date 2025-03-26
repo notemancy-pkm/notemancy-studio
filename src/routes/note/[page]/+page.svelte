@@ -8,6 +8,7 @@
   import Database from "@tauri-apps/plugin-sql";
   import { getCartaInstance } from "./getCarta";
   import NoteEditor from "./NoteEditor.svelte";
+  import ToC from "./ToC.svelte";
 
   // Create Carta instance with sanitizer
   let carta = $state(getCartaInstance("light"));
@@ -83,8 +84,8 @@
       <p>{error}</p>
     </div>
   {:else}
-    <div class="bg-white p-6">
-      <div class="mx-auto max-w-[784px] pb-16">
+    <div class=" p-6">
+      <div class="mx-auto max-w-[784px] pb-16" id="mdcontent">
         <div class="mb-16 prose prose-md mx-auto">
           <h1 class="mb-2 font-semibold font-[Noto_Sans] text-center">
             {noteTitle}
