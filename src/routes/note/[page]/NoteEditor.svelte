@@ -124,6 +124,7 @@
     {/if}
   </button>-->
 
+  <hr class="border-blue-400 mb-16" />
   <!-- Save Status Messages -->
   {#if saveError}
     <div

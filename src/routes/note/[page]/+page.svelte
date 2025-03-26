@@ -86,7 +86,6 @@
             {noteTitle}
           </h1>
         </div>
-        <hr class="border-blue-400 mb-16" />
 
         <!-- Use our new NoteEditor component instead of just Markdown -->
         <NoteEditor
