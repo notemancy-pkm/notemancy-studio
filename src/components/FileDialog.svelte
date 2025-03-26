@@ -120,8 +120,8 @@
   function openNote(relativePath: string) {
     console.log("REL: ", relativePath);
     // Navigate to the note page
-    goto(`/note/${encodeURIComponent(relativePath)}`);
     open.set(false); // Close the dialog
+    goto(`/note/${encodeURIComponent(relativePath)}`);
     searchQuery = ""; // Reset search
   }
 
@@ -248,11 +248,11 @@
             <p class="text-gray-500">No matching notes found</p>
           </div>
         {:else}
-          <ul class="divide-y divide-gray-100">
+          <ul class="divide-y divide-gray-50">
             {#each filteredNotes as note}
               <li>
                 <button
-                  class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 rounded"
+                  class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors rounded"
                   onclick={() => openNote(note.relative_path)}
                 >
                   <div class="font-medium text-blue-600">
