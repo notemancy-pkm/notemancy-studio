@@ -6,11 +6,10 @@
   import DOMPurify from "isomorphic-dompurify";
   import { page } from "$app/stores";
   import Database from "@tauri-apps/plugin-sql";
+  import { getCartaInstance } from "./getCarta";
 
   // Create Carta instance with sanitizer
-  const carta = new Carta({
-    sanitizer: DOMPurify.sanitize,
-  });
+  let carta = $state(getCartaInstance("light"));
 
   let noteContent = $state("");
   let noteTitle = $state("");

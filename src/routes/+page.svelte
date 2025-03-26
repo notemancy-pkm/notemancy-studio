@@ -1,6 +1,5 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import SettingsDialog from "../components/SettingsDialog.svelte";
   import Database from "@tauri-apps/plugin-sql";
   import FuzzySearchInput from "../components/FuzzySearchInput.svelte";
   import { onMount } from "svelte";
@@ -65,11 +64,9 @@
   });
 </script>
 
-<SettingsDialog />
-
 <main class="container mx-auto px-4 py-8">
   <!-- Main content with left sidebar for notes count -->
-  <div class="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto">
+  <div class="flex items-center justify-center gap-6 max-w-6xl mx-auto">
     <!-- Left sidebar with note count -->
     <div class="w-full md:w-64 flex-shrink-0">
       <div class="rounded-xl shadow-lg p-6 text-gray-800">
@@ -101,90 +98,9 @@
             <span class="text-sm opacity-75 mt-1">
               {notes.length === 1 ? "note" : "notes"} in vault
             </span>
-            {#if notes.length !== filteredNotes.length}
-              <span class="text-xs text-blue-600 mt-2">
-                Filtered: {filteredNotes.length} notes
-              </span>
-            {/if}
           </div>
         {/if}
       </div>
-    </div>
-
-    <!-- Notes table on the right -->
-    <div class="flex-grow">
-      <h2 class="text-2xl font-semibold mb-4">Your Notes</h2>
-      {#if notes.length > 0 && !loading && !error}
-        <FuzzySearchInput
-          data={notes}
-          keys={["title", "relative_path"]}
-          on:results={handleSearchResults}
-          placeholder="Search notes by title or path..."
-        />
-      {/if}
-
-      {#if loading}
-        <div class="text-center py-10">
-          <p class="text-gray-500">Loading notes...</p>
-        </div>
-      {:else if error}
-        <div class="bg-red-50 text-red-700 p-4 rounded-lg text-center">
-          <p>{error}</p>
-        </div>
-      {:else if notes.length === 0}
-        <div class="bg-blue-50 text-blue-700 p-6 rounded-lg text-center">
-          <p>
-            No notes found in your vault. Add some markdown files to get
-            started!
-          </p>
-        </div>
-      {:else}
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-          <table class="min-w-full divide-y divide-none">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Note Title
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-none">
-              {#if filteredNotes.length === 0}
-                <tr>
-                  <td
-                    class="px-6 py-4 text-center text-sm text-gray-500"
-                    colspan="1"
-                  >
-                    No matching notes found
-                  </td>
-                </tr>
-              {:else}
-                {#each filteredNotes as note}
-                  <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <a
-                        href={`/note/${encodePathForUrl(note.relative_path)}`}
-                        class="block"
-                      >
-                        <div
-                          class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {note.title}
-                        </div>
-                        <div class="text-xs text-gray-500 mt-0.5">
-                          {note.relative_path}
-                        </div>
-                      </a>
-                    </td>
-                  </tr>
-                {/each}
-              {/if}
-            </tbody>
-          </table>
-        </div>
-      {/if}
     </div>
   </div>
 </main>
